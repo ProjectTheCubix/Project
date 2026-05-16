@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Play</title>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #0f0f0f;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Hamburger Menu */
+    #menuBtn {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      width: 40px;
+      height: 40px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    #menuBtn div {
+      width: 24px;
+      height: 3px;
+      background: white;
+      margin: 3px 0;
+      border-radius: 2px;
+    }
+
+    /* Game Area */
+    #gameArea {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: #111; /* static background */
+    }
+
+    /* Blue Rectangle Character */
+    #player {
+      position: absolute;
+      width: 50px;
+      height: 70px;
+      background: #3b82f6;
+      border-radius: 6px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Joystick */
+    #joystickBase {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      width: 140px;
+      height: 140px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      backdrop-filter: blur(4px);
+      touch-action: none;
+    }
+
+    #joystickStick {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 50%;
+      top: 35px;
+      left: 35px;
+      transition: 0.05s;
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hamburger Menu -->
+  <div id="menuBtn">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+
+  <!-- Game Area -->
+  <div id="gameArea">
+    <div id="player"></div>
+
+    <!-- Joystick -->
+    <div id="joystickBase">
+      <div id="joystickStick"></div>
+    </div>
+  </div>
+
+  <script>
+    /* MENU BUTTON → HOME */
+    document.getElementById("menuBtn").onclick = () => {
+      window.location.href = "home.html";
+    };
+
+    /* PLAYER MOVEMENT */
+    const player = document.getElementById("player");
+    let px = window.innerWidth / 2;
+    let py = window.innerHeight / 2;
+
+    const stick = document.getElementById("joystickStick");
+    const base = document.getElementById("joystickBase");
+
+    let dragging = false;
+
+    base.addEventListener("touchstart", (e) => {
+      dragging = true;
+    });
+
+    base.addEventListener("touchend", () => {
+      dragging = false;
+      stick.style.left = "35px";
+      stick.style.top = "35px";
+    });
+
+    base.addEventListener("touchmove", (e) => {
+      if (!dragging) return;
+
+      const rect = base.getBoundingClientRect();
+      const touch = e.touches[0];
+
+      let x = touch.clientX - rect.left - 35;
+      let y = touch.clientY - rect.top - 35;
+
+      const dist = Math.sqrt(x*x + y*y);
+      const maxDist = 50;
+
+      if (dist > maxDist) {
+        x = (x / dist) * maxDist;
+        y = (y / dist) * maxDist;
+      }
+
+      stick.style.left = (35 + x) + "px";
+      stick.style.top = (35 + y) + "px";
+
+      px += x * 0.15;
+      py += y * 0.15;
+
+      player.style.left = px + "px";
+      player.style.top = py + "px";
+    });
+  </script>
+
+</body>
+</html>

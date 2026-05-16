@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f0f0f;
+      color: white;
+      padding: 20px;
+    }
+
+    /* Screens */
+    #homeScreen { display: block; }
+    #createScreen { display: none; }
+
+    /* Profile */
+    .profile {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .profile img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid #3b82f6;
+      object-fit: cover;
+    }
+
+    h2 { margin-top: 10px; }
+
+    /* Categories */
+    .category {
+      margin-top: 40px;
+    }
+
+    .category h3 {
+      margin-bottom: 10px;
+      border-left: 4px solid #3b82f6;
+      padding-left: 10px;
+    }
+
+    .games {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .game-card {
+      width: 150px;
+      background: #1a1a1a;
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .game-card:hover {
+      transform: scale(1.05);
+      background: #222;
+    }
+
+    .game-card img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    /* Floating + Button */
+    #plusBtn {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      width: 60px;
+      height: 60px;
+      background: #3b82f6;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 36px;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 0 12px rgba(0,0,0,0.4);
+    }
+
+    #plusBtn:hover {
+      transform: scale(1.1);
+      background: #2563eb;
+    }
+
+    /* Create Screen */
+    #createScreen h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .thumb-container {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .thumb {
+      width: 120px;
+      height: 120px;
+      border-radius: 10px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: 0.2s;
+    }
+
+    .thumb:hover { transform: scale(1.05); }
+    .selected { border-color: #3b82f6; transform: scale(1.1); }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 350px;
+      margin: 0 auto;
+    }
+
+    input, textarea {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+      background: #1a1a1a;
+      color: white;
+    }
+
+    textarea { height: 100px; resize: none; }
+
+    button {
+      padding: 12px;
+      background: #3b82f6;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover { background: #2563eb; }
+  </style>
+</head>
+<body>
+
+  <!-- HOME SCREEN -->
+  <div id="homeScreen">
+    <div class="profile">
+      <img id="pfp" src="">
+      <h2 id="username"></h2>
+    </div>
+
+    <div id="categories"></div>
+
+    <div id="plusBtn">+</div>
+  </div>
+
+  <!-- CREATE GAME SCREEN -->
+  <div id="createScreen">
+    <h1>Create a Game</h1>
+
+    <div class="thumb-container" id="thumbContainer"></div>
+
+    <form id="createForm">
+      <input type="text" id="title" placeholder="Game Title" required>
+      <textarea id="description" placeholder="Game Description" required></textarea>
+      <input type="hidden" id="selectedThumb">
+      <button type="submit">Publish Game</button>
+    </form>
+  </div>
+
+  <script>
+    /* LOAD USER ACCOUNT */
+    const saved = JSON.parse(localStorage.getItem("account"));
+    if (!saved) {
+      alert("No account found. Please log in.");
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("pfp").src = saved.pfp;
+    document.getElementById("username").textContent = saved.username;
+
+    /* LOAD COMMUNITY GAMES */
+    function loadGames() {
+      const communityGames = JSON.parse(localStorage.getItem("communityGames")) || [];
+      const categoriesDiv = document.getElementById("categories");
+      categoriesDiv.innerHTML = "";
+
+      if (communityGames.length === 0) {
+        categoriesDiv.innerHTML = "<p style='text-align:center; opacity:0.6;'>No community games yet.</p>";
+        return;
+      }
+
+      const grouped = {};
+      communityGames.forEach(game => {
+        if (!grouped[game.category]) grouped[game.category] = [];
+        grouped[game.category].push(game);
+      });
+
+      Object.keys(grouped).forEach(category => {
+        const section = document.createElement("div");
+        section.classList.add("category");
+
+        const title = document.createElement("h3");
+        title.textContent = category;
+        section.appendChild(title);
+
+        const gameRow = document.createElement("div");
+        gameRow.classList.add("games");
+
+        const shuffled = grouped[category].sort(() => Math.random() - 0.5);
+
+        shuffled.slice(0, 3).forEach(game => {
+          const card = document.createElement("div");
+          card.classList.add("game-card");
+
+          card.innerHTML = `
+            <img src="${game.thumbnail}">
+            <p>${game.name}</p>
+          `;
+
+          /* CLICK → PLAY.HTML */
+          card.onclick = () => {
+            localStorage.setItem("currentGame", JSON.stringify(game));
+            window.location.href = "play.html";
+          };
+
+          gameRow.appendChild(card);
+        });
+
+        section.appendChild(gameRow);
+        categoriesDiv.appendChild(section);
+      });
+    }
+
+    loadGames();
+
+    /* SWITCH TO CREATE MODE */
+    document.getElementById("plusBtn").onclick = () => {
+      document.getElementById("homeScreen").style.display = "none";
+      document.getElementById("createScreen").style.display = "block";
+    };
+
+    /* LOAD THUMBNAILS */
+    const thumbContainer = document.getElementById("thumbContainer");
+
+    for (let i = 4; i <= 7; i++) {
+      const img = document.createElement("img");
+      img.src = `img${i}.jpeg`;
+      img.classList.add("thumb");
+
+      img.onclick = () => {
+        document.querySelectorAll(".thumb").forEach(t => t.classList.remove("selected"));
+        img.classList.add("selected");
+        document.getElementById("selectedThumb").value = img.src;
+      };
+
+      thumbContainer.appendChild(img);
+    }
+
+    /* CREATE GAME */
+    document.getElementById("createForm").onsubmit = (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById("title").value;
+      const description = document.getElementById("description").value;
+      const thumbnail = document.getElementById("selectedThumb").value;
+
+      if (!thumbnail) {
+        alert("Please select a thumbnail");
+        return;
+      }
+
+      const games = JSON.parse(localStorage.getItem("communityGames")) || [];
+
+      games.push({
+        name: title,
+        description: description,
+        thumbnail: thumbnail,
+        category: "Community"
+      });
+
+      localStorage.setItem("communityGames", JSON.stringify(games));
+
+      alert("Game published!");
+
+      /* RETURN TO HOME */
+      document.getElementById("createScreen").style.display = "none";
+      document.getElementById("homeScreen").style.display = "block";
+
+      loadGames();
+    };
+  </script>
+
+</body>
+</html>
